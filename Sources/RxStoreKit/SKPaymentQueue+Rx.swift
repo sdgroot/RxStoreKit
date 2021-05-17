@@ -130,7 +130,7 @@ extension Reactive where Base: SKPaymentQueue {
         return observable
     }
 
-    public func add(product: SKProduct, shouldVerify: Bool) -> Observable<SKPaymentTransaction> {
+    public func add(product: SKProduct, shouldVerify: Bool, finishTransaction: Bool = true) -> Observable<SKPaymentTransaction> {
 
         let payment = SKPayment(product: product)
 
@@ -166,15 +166,17 @@ extension Reactive where Base: SKPaymentQueue {
 
                     switch transaction.transactionState {
                     case .purchased:
-                        SKPaymentQueue.default().finishTransaction(transaction)
-
+                        if finishTransaction {
+                            SKPaymentQueue.default().finishTransaction(transaction)
+                        }
                         observer.onNext(transaction)
                         observer.onCompleted()
 
                     case .failed:
-                        SKPaymentQueue.default().finishTransaction(transaction)
+                        if finishTransaction {
+                            SKPaymentQueue.default().finishTransaction(transaction)
+                        }
                         if let err = transaction.error {
-
                             observer.onError(err)
                         } else {
                             observer.onNext(transaction)
@@ -182,7 +184,9 @@ extension Reactive where Base: SKPaymentQueue {
                         }
 
                     case .restored:
-                        SKPaymentQueue.default().finishTransaction(transaction)
+                        if finishTransaction {
+                            SKPaymentQueue.default().finishTransaction(transaction)
+                        }
                         observer.onNext(transaction)
 
                     default:
